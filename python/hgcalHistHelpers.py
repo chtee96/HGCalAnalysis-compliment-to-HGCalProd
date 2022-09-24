@@ -20,7 +20,8 @@ import settings
 #Instead of Magenta -> 123
 #Instead of Black -> 129
 
-ROOT.gROOT.ProcessLine(".x rootlogon.C")
+#ROOT.gROOT.ProcessLine(".x rootlogon.C")
+ROOT.gROOT.ProcessLine(".x /afs/cern.ch/user/c/chtee/HGCAL_production/CMSSW_12_3_0_pre6/src/HGCalValidator/HGCalAnalysis/python/rootlogon.C")
 
 def histValue1D(fValues, histDict, tag="hist1D_", title="hist 1D", axunit="a.u.", binsBoundariesX=[10, -1, 1], ayunit="a.u.", verbosityLevel=0):
     """1D histograming of given list of values."""
