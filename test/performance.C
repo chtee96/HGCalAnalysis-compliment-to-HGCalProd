@@ -40,7 +40,7 @@ std::string replaceFirstOccurrence(
     return s.replace(pos, toReplace.length(), replaceWith);
 };
 
-void performance(std::string inputFileTemplate = "/eos/cms/store/group/dpg_hgcal/comm_hgcal/apsallid/CalibrationStudies/ResolutionTrees_20220327/CE_E_Front_120um/hgc_singlephoton_eENERGYGeV_nopu.root", std::string region = "CE_E_Front_120um") {
+void performance(std::string inputFileTemplate = "/eos/user/c/chtee/CalibrationStudies/ResolutionTrees_20220923/CE_E_Front_120um/hgc_singlephoton_eENERGYGeV_nopu.root", std::string region = "CE_E_Front_120um") {
   TH1::SetDefaultSumw2(kTRUE);
   setTDRStyle();
   gROOT->SetBatch(false);
@@ -53,22 +53,26 @@ void performance(std::string inputFileTemplate = "/eos/cms/store/group/dpg_hgcal
   std::vector<unsigned int> energies_;
   energies_.push_back(10.);
   energies_.push_back(100.);
-  energies_.push_back(120.);
-  energies_.push_back(15.);
-  energies_.push_back(150.);
-  energies_.push_back(180.);
-  energies_.push_back(2.);
-  energies_.push_back(200.);
+  energies_.push_back(20.);
   energies_.push_back(250.);
-  energies_.push_back(3.);
-  energies_.push_back(30.);
-  energies_.push_back(300.);
-  energies_.push_back(400.);
-  energies_.push_back(500.);
+  energies_.push_back(320.);
   energies_.push_back(5.);
-  energies_.push_back(50.);
-  energies_.push_back(8.);
-  energies_.push_back(80.);
+  //energies_.push_back(120.);
+  //energies_.push_back(15.);
+  //energies_.push_back(150.);
+  //energies_.push_back(180.);
+  //energies_.push_back(2.);
+  //energies_.push_back(200.);
+  //energies_.push_back(250.);
+  //energies_.push_back(3.);
+  //energies_.push_back(30.);
+  //energies_.push_back(300.);
+  //energies_.push_back(400.);
+  //energies_.push_back(500.);
+  //energies_.push_back(5.);
+  //energies_.push_back(50.);
+  //energies_.push_back(8.);
+  //energies_.push_back(80.);
 
   std::vector<TTree*> trees_nopu_;
   for (unsigned int itree = 0; itree<energies_.size(); ++itree) {
@@ -136,6 +140,7 @@ void performance(std::string inputFileTemplate = "/eos/cms/store/group/dpg_hgcal
   perf_recable.h_resolution->GetXaxis()->SetTitle("E_{GEN}");
   // perf_uncalib.h_resolution->Draw("P sames");
   // perf_had_clusterized.h_resolution->Draw("P sames");
+  c_resolution->SaveAs(Resolution.png);
 
   gStyle->SetOptStat(0);
   TCanvas *c_resolution_corr = new TCanvas("c_resolution_corr","c_resolution_corr",500,500);
@@ -144,6 +149,7 @@ void performance(std::string inputFileTemplate = "/eos/cms/store/group/dpg_hgcal
   //perf_recable.h_resolution_corr->GetYaxis()->SetTitle("#sigma(E_{RECO}) / <E_{RECO}>");
   perf_recable.h_resolution_corr->GetYaxis()->SetTitle("#sigma(E)/E");
   perf_recable.h_resolution_corr->GetXaxis()->SetTitle("E_{GEN}");
+  c_resolution_corr->SaveAs("ResolutionCorr.png");
   // perf_uncalib.h_resolution_corr->Draw("P sames");
   // perf_had_clusterized.h_resolution_corr->Draw("P sames");
   return;
