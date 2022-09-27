@@ -36,23 +36,23 @@ HGCalAnalysis = cms.EDAnalyzer(
     #RecHitsRaw tree
     doRecHitsRawTree = cms.untracked.bool(False),
     #RecHits tree
-    doRecHitsTree = cms.untracked.bool(False),
+    doRecHitsTree = cms.untracked.bool(True),
     #CaloParticle tree
     doCaloParticleTree = cms.untracked.bool(False),
     #SimCluster tree
-    doSimClustersTree = cms.untracked.bool(False),
+    doSimClustersTree = cms.untracked.bool(True),
     doSimClustersFromCPs = cms.untracked.bool(False),
     label_SimClusters = cms.InputTag("SimClusters"),
     label_SimClustersLevel = cms.InputTag("ClusterLevel"),
     #Layer Cluster tree
-    doLayerClustersTree = cms.untracked.bool(True),
+    doLayerClustersTree = cms.untracked.bool(False),
     label_layerClusterPlots = cms.InputTag("hgcalLayerClusters"),
     label_LCToCPLinking = cms.InputTag("LCToCP_association"),
     #Select caloParticles for efficiency or pass through
-    doCaloParticleSelection = cms.untracked.bool(False),
+    doCaloParticleSelection = cms.untracked.bool(True),
     #Trackster and SimTrakcsters trees
     doTrackstersPlots = cms.untracked.bool(False),
-    doOnlyTrackstersMerge = cms.untracked.bool(False),
+    doOnlyTrackstersMerge = cms.untracked.bool(True),
     doEdges = cms.untracked.bool(False),
     label_TS = cms.InputTag("Morphology"),
     label_TSToCPLinking = cms.InputTag("TSToCP_linking"),
