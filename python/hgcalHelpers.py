@@ -6,6 +6,7 @@ from hgcalHistHelpers import *
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+import statistics
 
 #---------------------------------------------------------------------------------------------------
 # Analyze SimClusters tree
@@ -105,6 +106,7 @@ def analyzeSimClusters(ntuple,tree,maxEvents,outDir,output,verbosityLevel):
     #Finished loop over events. Create the per hit dataframe
     #df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in out.items() ]))
     data = { k: np.array(v) for k,v in out.items() }
+    print(data)
     ROOT.ROOT.EnableImplicitMT()
     df = ROOT.RDF.MakeNumpyDataFrame(data)
     #df.fillna(-99999,inplace=True)
@@ -272,6 +274,97 @@ def recHitCalibration(df,tree,maxEvents,outDir,output,GenEnergy,ecut,verbosityLe
 
     #Make the plots
     recHitCalibrationPlots(the_df_m,the_df_u,tree,maxEvents,outDir,output,GenEnergy,ecut,verbosityLevel)
+
+    ###this is the plot for resolution vs shower depth
+    eid=[]
+    for eventid in the_df_m['EventId'].unique():
+        eid.append(eventid)
+
+    info_list = [] #event, shower depth , SF
+    for event in eid:
+        temp_df = the_df_m.loc[the_df_m['EventId'] == event]# locate the particular event and turn it into a df
+        ene_times_matbud = temp_df.rechit_recostructable_energy* temp_df.rechit_matbudget 
+        info_list.append([event, ene_times_matbud.sum(axis=0)/ temp_df.rechit_recostructable_energy.sum(axis=0) , temp_df.recHitEneXFractionOvertheEgen.sum(axis=0) ] )
+    df_temp = pd.DataFrame(info_list, columns = ['EventId', 'shower_depth', 'SF'], index= [ i[0] for i in info_list ] ).sort_values(by = ['EventId'])
+    df_temp['shower_depth'] = df_temp['shower_depth'].div(df_temp.loc[:, 'shower_depth'].mean())
+
+    df_temp = df_temp.sort_values('shower_depth')
+    norm_shower_depth = np.linspace(0.6,2.5,num =39)
+    shower_list = list(norm_shower_depth)
+    df_temp_list = list(df_temp.itertuples(index=False, name=None))
+
+    ###extracting info 
+
+    res_ = []
+    res_err = []
+    mean_shower_depth = []
+    mean_shower_depth_err = []
+    for i in range(len(norm_shower_depth)):
+        if i+1 >= len(norm_shower_depth):break
+        print(i, norm_shower_depth[i], i+1, norm_shower_depth[i+1])
+        _work = []
+        _shower_depth = []
+        for j,data in enumerate(df_temp_list):
+            #ignoring data out of defined shower_depth range
+            if data[1] < norm_shower_depth[0]: continue
+            if data[1] > norm_shower_depth[-1]:continue
+            #data selection within range
+            if data[1] > norm_shower_depth[i] and data[1] < norm_shower_depth[i+1]:
+                _work.append(data[2])
+                _shower_depth.append(data[1])
+            if data[1] > norm_shower_depth[i+1]:
+                break
+        if (len(_work)) == 0.: continue
+        elif (len(_work)) == 1.: res_.append(0.), res_err.append(0.), mean_shower_depth.append(_shower_depth[0]), mean_shower_depth_err.append(0)
+        else:
+            mean_shower_depth.append(statistics.mean(_shower_depth))
+            mean_shower_depth_err.append(statistics.stdev(_shower_depth))
+            _h1 = ROOT.TH1F("_h1","_h1", 50, 0.7, 1.2 )
+            for i in _work:
+                _h1.Fill(i)
+            _h1.Fit("gaus",'S')
+            myfunc = _h1.GetFunction("gaus")
+            res_.append(myfunc.GetParameter(2))
+            res_err.append(myfunc.GetParError(2))
+            print("Fit results")
+            print(myfunc.GetParameter(1),myfunc.GetParameter(2),myfunc.GetParError(2))
+            del _h1,myfunc 
+     
+
+
+    hShowerDepth = ROOT.TH1F("hShowerDepth","hShowerDepth",38,array('f',shower_list))
+    for i in df_temp['shower_depth']:
+        hShowerDepth.Fill(i)
+
+    c_temp = ROOT.TCanvas("c","c",0,0,700,500)
+    gr_sem = ROOT.TGraphErrors(len(res_), array('f',mean_shower_depth), array('f',res_) ,array('f',mean_shower_depth_err),
+                                    array('f',res_err))
+
+    #c.Draw()
+    hShowerDepth.Draw("hist");
+    hShowerDepth.SetLineColor(4);
+
+    gr_y_max = hShowerDepth.GetBinContent(hShowerDepth.GetMaximumBin())+2
+    hShowerDepth.GetYaxis().SetRangeUser(0, gr_y_max)
+    scale =0.0001 #0.0001 for all events
+    hShowerDepth.Scale(scale)
+
+    gr_sem.Draw("P")
+    gr_sem.SetMarkerColor(1);
+    gr_sem.SetMarkerStyle(20)
+    gr_sem.SetFillStyle(0);
+
+    axis = ROOT.TGaxis(2.5,0, 2.5, gr_y_max*scale ,0,gr_y_max,510,"+R")
+    axis.SetLineColor(4);
+    axis.SetLabelColor(4);
+    axis.SetTitleColor(4)
+    axis.SetTitle("Counts");
+    axis.SetTitleOffset(0.3)
+    axis.Draw();
+    hShowerDepth.SetTitle("Resolution vs Normalised Shower Depth for %s GeV;Normalised Shower Depth;Resolution"%(GenEnergy))
+    hShowerDepth.GetYaxis().SetTitleOffset(0.8)
+    hShowerDepth.GetXaxis().SetTitleOffset(0.7)
+    c_temp.SaveAs("%s/Res_vs_shower_depth_%d.png"%(outDir,GenEnergy))
 
     #We want the sum of the above column per Event per hit thickness and per detector 
     recHitEneXFractionSumPerThick = the_df_m.groupby(['EventId','sClusHitsThick','sClusHitsDet']).agg( recHitEneXFractionSum  = ('recHitEneXFraction','sum'))
